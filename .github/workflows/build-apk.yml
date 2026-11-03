@@ -1,0 +1,70 @@
+name: Build signed APK + Release
+
+on:
+  push:
+    branches: [ main, master ]
+    paths-ignore: [ 'docs/**', '**.md', 'LICENSE', '.gitignore', 'tools/**' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Test the Real-Debrid API layer
+        run: node tests/rd-api.test.js
+
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.9' }
+
+      - name: Prepare signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            echo "KEYSTORE_FILE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+            echo "SIGNED=true" >> "$GITHUB_ENV"
+          else
+            echo "SIGNED=false" >> "$GITHUB_ENV"
+            echo "::warning::No KEYSTORE_BASE64 / KEYSTORE_PASSWORD secrets: building an unsigned-by-you debug APK, no Release is published."
+          fi
+
+      - name: Build APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ "$SIGNED" = "true" ]; then gradle assembleRelease --no-daemon; else gradle assembleDebug --no-daemon; fi
+
+      - name: Collect + verify APK
+        run: |
+          mkdir -p out
+          if [ "$SIGNED" = "true" ]; then cp app/build/outputs/apk/release/app-release.apk out/RealDebrid.apk
+          else cp app/build/outputs/apk/debug/app-debug.apk out/RealDebrid.apk; fi
+          APKSIGNER=$(ls $ANDROID_HOME/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --verbose --print-certs out/RealDebrid.apk | tee out/signature.txt
+          (cd out && sha256sum RealDebrid.apk > RealDebrid.apk.sha256)
+
+      - uses: actions/upload-artifact@v4
+        with: { name: RealDebrid-APK, path: out/ }
+
+      - name: Publish GitHub Release
+        if: env.SIGNED == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VC=$((100 + GITHUB_RUN_NUMBER))
+          sed -e "s/__VC__/$VC/g" -e "s/__VN__/1.0.$GITHUB_RUN_NUMBER/g" -e "s/__SHA__/${GITHUB_SHA::7}/g" \
+              -e "s/__SUM__/$(cut -d' ' -f1 out/RealDebrid.apk.sha256)/g" .github/release-notes.md > out/notes.md
+          gh release create "build-$VC" out/RealDebrid.apk out/RealDebrid.apk.sha256 \
+            --title "Real-Debrid for Android & Android TV v1.0.$GITHUB_RUN_NUMBER" \
+            --notes-file out/notes.md --latest \
+            || gh release upload "build-$VC" out/RealDebrid.apk out/RealDebrid.apk.sha256 --clobber
