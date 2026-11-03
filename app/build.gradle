@@ -1,0 +1,76 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.realdebrid.mobile'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.realdebrid.mobile"
+        minSdk 26
+        targetSdk 34
+
+        // Every GitHub build gets a higher number, so each build can be installed over the previous one.
+        def runNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "0").toInteger()
+        versionCode 100 + runNumber
+        versionName "1.0." + runNumber
+
+        // The app checks this repository for new releases ("owner/name"); filled in automatically on GitHub.
+        buildConfigField "String", "UPDATE_REPO", "\"" + (System.getenv("GITHUB_REPOSITORY") ?: "") + "\""
+
+        ndk {
+            abiFilters 'arm64-v8a', 'armeabi-v7a'
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    signingConfigs {
+        release {
+            def ksPath = System.getenv("KEYSTORE_FILE")
+            if (ksPath != null && new File(ksPath).exists()) {
+                storeFile file(ksPath)
+                storePassword System.getenv("KEYSTORE_PASSWORD")
+                storeType "pkcs12"
+                keyAlias "realdebrid"
+                keyPassword System.getenv("KEYSTORE_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (System.getenv("KEYSTORE_FILE") != null) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // Built-in video player (ExoPlayer / Media3)
+    implementation 'androidx.media3:media3-exoplayer:1.7.1'
+    implementation 'androidx.media3:media3-exoplayer-hls:1.7.1'
+    implementation 'androidx.media3:media3-ui:1.7.1'
+    // FFmpeg software decoders for audio AND video (DTS, AC3, E-AC3, TrueHD, FLAC, Opus, H.264, HEVC, VP8, VP9)
+    implementation 'io.github.anilbeesetti:nextlib-media3ext:1.7.1-0.9.0'
+    // Chromecast (cast to TV) + AppCompat (needed by the cast device chooser)
+    implementation 'androidx.media3:media3-cast:1.7.1'
+    implementation 'androidx.mediarouter:mediarouter:1.7.0'
+    implementation 'com.google.android.gms:play-services-cast-framework:21.5.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+}
