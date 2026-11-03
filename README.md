@@ -3,7 +3,7 @@
 <h1 align="center">Real-Debrid for Android &amp; Android TV</h1>
 
 <p align="center">
-  <a href="../../releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/YOUR-USER/YOUR-REPO?label=download&color=10b981"></a>
+  <a href="../../releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/paktigers/RealDebrid-App?label=download&color=10b981"></a>
   <img alt="Android 8.0+" src="https://img.shields.io/badge/Android-8.0%2B-3ddc84">
   <img alt="Android TV" src="https://img.shields.io/badge/Android%20TV-supported-22d3ee">
   <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-blue">
