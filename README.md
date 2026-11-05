@@ -3,7 +3,7 @@
 <h1 align="center">Real-Debrid for Android &amp; Android TV</h1>
 
 <p align="center">
-  <a href="../../releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/paktigers/RealDebrid-App?label=download&color=10b981"></a>
+  <a href="../../releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/YOUR-USER/YOUR-REPO?label=download&color=10b981"></a>
   <img alt="Android 8.0+" src="https://img.shields.io/badge/Android-8.0%2B-3ddc84">
   <img alt="Android TV" src="https://img.shields.io/badge/Android%20TV-supported-22d3ee">
   <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-blue">
@@ -39,7 +39,7 @@ The app appears in the TV launcher and is fully usable **with the remote only**:
 ## Other screens
 
 <p align="center">
-  <img src="docs/screenshots/06-login-code.png" width="22%"> 
+  <img src="docs/screenshots/11-more.png" width="22%"> 
   <img src="docs/screenshots/07-torrents-light.png" width="22%"> 
   <img src="docs/screenshots/08-tablet.png" width="50%">
 </p>
